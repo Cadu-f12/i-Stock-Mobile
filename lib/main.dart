@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:i_stock_mobile/cubits/login_cubit.dart';
+import 'package:i_stock_mobile/repositories/device_authenticator.dart';
 import 'package:i_stock_mobile/repositories/login_repository.dart';
+import 'package:i_stock_mobile/repositories/session_store.dart';
 import 'package:i_stock_mobile/views/login_page.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:local_auth/local_auth.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   runApp(const MyApp());
 }
@@ -20,7 +25,11 @@ class MyApp extends StatelessWidget {
     ),
     dispose: (repository) => repository.close(),
     child: BlocProvider<LoginCubit>(
-      create: (context) => LoginCubit(context.read<LoginRepositoryImpl>()),
+      create: (context) => LoginCubit(
+        context.read<LoginRepositoryImpl>(),
+        SecureSessionStore(const FlutterSecureStorage()),
+        NativeDeviceAuthenticator(LocalAuthentication()),
+      ),
       child: _buildApp(),
     ),
   );

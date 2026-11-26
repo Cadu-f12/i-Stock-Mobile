@@ -17,15 +17,15 @@ lib/
 └── views/
 ```
 
-- `main.dart` is the composition root: it loads environment configuration, creates the repository, provides the repository and `LoginCubit`, and starts the Flutter app.
+- `main.dart` is the composition root: it loads environment configuration, creates the login repository, secure session store, and native device authenticator, provides `LoginCubit`, and starts the Flutter app.
 - `views/` contains screens and UI widgets. `login_page.dart` renders the login form; `pastilles_placeholder_page.dart` is only a temporary destination after successful login.
-- `cubits/` contains Cubit classes that handle user actions and coordinate the view with repositories. `login_cubit.dart` currently owns login form behavior and submission.
+- `cubits/` contains Cubit classes that handle user actions and coordinate the view with repositories. `login_cubit.dart` owns login, optional biometric unlock, session expiry, and sign-out.
 - `states/` contains the explicit UI states consumed by the views. `login_state.dart` defines the shared login state and its initial, error, loading, and loaded variants.
-- `models/` contains data objects passed between layers, such as login credentials and the session returned by the API.
-- `repositories/` defines data-access contracts and their implementations. The login repository sends the HTTP request to I-STOCK Manager and maps its response or failures.
+- `models/` contains data objects passed between layers, such as login credentials, the session returned by the API, and the locally stored session with its expiry.
+- `repositories/` defines data-access contracts and their implementations. The login repository calls I-STOCK Manager; the session store uses platform-secure storage, and the device authenticator uses the native biometric prompt with device credential fallback.
 - `exceptions/` contains login-specific exceptions used to communicate request, response, and credential failures from the repository to the Cubit.
 
-For the implemented login flow, the view sends actions to the Cubit; the Cubit validates input and calls the repository; the repository communicates with the API and returns a model or raises an exception; the Cubit emits a state for the view to render.
+For the implemented login flow, the view sends actions to the Cubit; the Cubit validates input and calls the repository; the repository communicates with the API and returns a model or raises an exception; the Cubit emits a state for the view to render. After password login, the user can opt in to saving a short-lived session. The lock action returns to Login without clearing that session; sign-out clears it. On a later launch or after locking, the Cubit checks its expiry and invokes device authentication before reading the saved JWT.
 
 ## Tests
 
@@ -36,9 +36,9 @@ test/
 └── widget_test.dart
 ```
 
-- `test/cubits/` covers login state transitions and behavior.
+- `test/cubits/` covers login state transitions, session expiry, and biometric unlock behavior.
 - `test/repositories/` covers HTTP requests and API response handling with a controlled client.
-- `test/widget_test.dart` covers login screen behavior and integration with its Cubit.
+- `test/widget_test.dart` covers login screen behavior, opt-in, and unlock navigation. `test/helpers/` holds controlled session and device-authentication fakes.
 - Keep Flutter feature tests, fixtures, and helpers under `test/`. See the testing rules in [`AGENTS.md`](../AGENTS.md).
 
 ## Documentation and platform folders
@@ -50,4 +50,4 @@ test/
 
 ## Current boundaries
 
-Login is the only implemented API-backed feature. Pastilles is a placeholder; stock operations, movement history, biometric unlocking, and secure session storage have not been implemented. Add new layers or folders only when a feature needs them, and keep tests for each new feature under `test/`.
+Login is the only implemented API-backed feature. Optional biometric unlocking and secure session storage are implemented for Android and iOS; Pastilles remains a placeholder, and stock operations and movement history have not been implemented. Add new layers or folders only when a feature needs them, and keep tests for each new feature under `test/`.

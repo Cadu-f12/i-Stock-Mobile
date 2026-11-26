@@ -51,7 +51,7 @@ Keep the DDA brand's royal blue and white, with cool neutrals inspired by steel 
 - Keep the screen focused on email, password, and the primary sign-in action.
 - Label fields persistently; do not rely on placeholder text as the only label.
 - Show validation and authentication errors beside the relevant field or form, with a next step supported by the authentication service.
-- When the user has opted in and a saved JWT may still be valid, offer a clearly labeled biometric-unlock action alongside email/password sign-in.
+- Keep a clearly labeled biometric-unlock action visible alongside email/password sign-in. If there is no opted-in, valid saved session, explain that the user must sign in with email and password to enable it.
 - Explain that biometric unlocking only restores the saved session; if its 15-minute JWT has expired, ask for email and password again.
 - Handle biometric unavailable, not enrolled, cancelled, and failed states without hiding or blocking email/password sign-in.
 - Never imply that biometric verification renews a JWT or sends biometric data to the API.
@@ -83,7 +83,7 @@ Keep the DDA brand's royal blue and white, with cool neutrals inspired by steel 
 - Pair status colors with words or icons; never rely on color alone.
 - Use concise messages that state what happened and the next step.
 - Provide loading, content, empty, and error states for data-backed screens. For biometric access, distinguish unavailable/not enrolled, cancelled, failed, and expired-session states; always offer password sign-in.
-- On sign-out, remove the stored JWT and return to the Login screen.
+- Provide a lock action that returns to Login while preserving a still-valid, opted-in session. On sign-out, remove the stored JWT and return to Login.
 
 ## 5. Responsive behavior and accessibility
 

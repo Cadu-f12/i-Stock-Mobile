@@ -6,15 +6,25 @@ abstract class LoginState {
     this.email = '',
     this.password = '',
     this.isPasswordVisible = false,
+    this.canUnlock = false,
+    this.statusMessage,
   });
 
   final String email;
   final String password;
   final bool isPasswordVisible;
+  final bool canUnlock;
+  final String? statusMessage;
 }
 
 class LoginInitial extends LoginState {
-  const LoginInitial({super.email, super.password, super.isPasswordVisible});
+  const LoginInitial({
+    super.email,
+    super.password,
+    super.isPasswordVisible,
+    super.canUnlock,
+    super.statusMessage,
+  });
 }
 
 class LoginError extends LoginState {
@@ -22,6 +32,8 @@ class LoginError extends LoginState {
     super.email,
     super.password,
     super.isPasswordVisible,
+    super.canUnlock,
+    super.statusMessage,
     this.message,
     this.emailError,
     this.passwordError,
@@ -33,7 +45,13 @@ class LoginError extends LoginState {
 }
 
 class LoginLoading extends LoginState {
-  const LoginLoading({super.email, super.password, super.isPasswordVisible});
+  const LoginLoading({
+    super.email,
+    super.password,
+    super.isPasswordVisible,
+    super.canUnlock,
+    super.statusMessage,
+  });
 }
 
 class LoginLoaded extends LoginState {
@@ -41,8 +59,11 @@ class LoginLoaded extends LoginState {
     super.email,
     super.password,
     super.isPasswordVisible,
+    super.canUnlock,
     required this.session,
+    this.fromBiometrics = false,
   });
 
   final LoginSession session;
+  final bool fromBiometrics;
 }

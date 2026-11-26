@@ -13,7 +13,7 @@ I-STOCK Mobile is a Flutter mobile application for the I-STOCK inventory system 
 
 ## Current repository state
 
-The repository contains an implemented login view and Cubit, a login repository connected to the I-STOCK API, and automated Cubit, repository, and widget tests. After a successful login, navigation still opens a placeholder Pastilles page; stock management, movement history, biometrics, and secure session storage have not been implemented. The product target is mobile; the existence of other Flutter platform folders does not add them to product scope.
+The repository contains an implemented login view and Cubit, a login repository connected to the I-STOCK API, optional biometric unlocking of a valid securely stored session, and automated Cubit, repository, and widget tests. After authentication, navigation still opens a placeholder Pastilles page; stock management and movement history have not been implemented. The product target is mobile; the existence of other Flutter platform folders does not add them to product scope.
 
 `docs/requirements.md` and `docs/design_system.md` describe the intended product and UI behavior; they are not evidence that every specified feature already exists in code. `README.md` and `README.pt-BR.md` are project documentation. Keep them separate from the AI context documents unless the user explicitly requests README changes.
 

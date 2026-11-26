@@ -1,12 +1,13 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:i_stock_mobile/cubits/login_cubit.dart';
 import 'package:i_stock_mobile/exceptions/login_exceptions.dart';
 import 'package:i_stock_mobile/models/login_credentials.dart';
 import 'package:i_stock_mobile/models/login_session.dart';
 import 'package:i_stock_mobile/repositories/login_repository.dart';
 import 'package:i_stock_mobile/states/login_state.dart';
+
+import '../helpers/auth_fakes.dart';
 
 class FakeLoginRepository implements LoginRepository {
   FakeLoginRepository(this.authenticate);
@@ -25,7 +26,7 @@ class FakeLoginRepository implements LoginRepository {
 
 void main() {
   test('starts with an empty initial state', () async {
-    final cubit = LoginCubit(
+    final cubit = makeLoginCubit(
       FakeLoginRepository((_) => throw StateError('unexpected')),
     );
     addTearDown(cubit.close);
@@ -37,7 +38,7 @@ void main() {
   });
 
   test('updates form values and toggles password visibility', () async {
-    final cubit = LoginCubit(
+    final cubit = makeLoginCubit(
       FakeLoginRepository((_) => throw StateError('unexpected')),
     );
     addTearDown(cubit.close);
@@ -58,7 +59,7 @@ void main() {
     final repository = FakeLoginRepository(
       (_) => throw StateError('unexpected'),
     );
-    final cubit = LoginCubit(repository);
+    final cubit = makeLoginCubit(repository);
     addTearDown(cubit.close);
 
     await cubit.submit();
@@ -78,7 +79,7 @@ void main() {
   });
 
   test('editing after a field error restores initial state', () async {
-    final cubit = LoginCubit(
+    final cubit = makeLoginCubit(
       FakeLoginRepository((_) => throw StateError('unexpected')),
     );
     addTearDown(cubit.close);
@@ -96,7 +97,7 @@ void main() {
     () async {
       final pending = Completer<LoginSession>();
       final repository = FakeLoginRepository((_) => pending.future);
-      final cubit = LoginCubit(repository);
+      final cubit = makeLoginCubit(repository);
       addTearDown(cubit.close);
       cubit.emailChanged('user@example.com');
       cubit.passwordChanged('secret');
@@ -117,14 +118,14 @@ void main() {
       final loaded = cubit.state as LoginLoaded;
       expect(loaded.session.accessToken, 'jwt');
       expect(loaded.password, isEmpty);
-      cubit.signOut();
+      await cubit.signOut();
       expect(cubit.state, isA<LoginInitial>());
       expect(cubit.state.email, isEmpty);
     },
   );
 
   test('keeps credentials and gives a specific message for 401', () async {
-    final cubit = LoginCubit(
+    final cubit = makeLoginCubit(
       FakeLoginRepository(
         (_) async => throw const LoginInvalidCredentialsException(),
       ),
@@ -142,7 +143,7 @@ void main() {
   });
 
   test('gives a generic message for request failures', () async {
-    final cubit = LoginCubit(
+    final cubit = makeLoginCubit(
       FakeLoginRepository((_) async => throw const LoginRequestException()),
     );
     addTearDown(cubit.close);
@@ -158,13 +159,13 @@ void main() {
 
   test('signing out during a request prevents a late success', () async {
     final pending = Completer<LoginSession>();
-    final cubit = LoginCubit(FakeLoginRepository((_) => pending.future));
+    final cubit = makeLoginCubit(FakeLoginRepository((_) => pending.future));
     addTearDown(cubit.close);
     cubit.emailChanged('user@example.com');
     cubit.passwordChanged('secret');
     final submission = cubit.submit();
 
-    cubit.signOut();
+    await cubit.signOut();
     pending.complete(
       const LoginSession(accessToken: 'jwt', tokenType: 'Bearer'),
     );
@@ -176,13 +177,13 @@ void main() {
 
   test('signing out during a request prevents a late error', () async {
     final pending = Completer<LoginSession>();
-    final cubit = LoginCubit(FakeLoginRepository((_) => pending.future));
+    final cubit = makeLoginCubit(FakeLoginRepository((_) => pending.future));
     addTearDown(cubit.close);
     cubit.emailChanged('user@example.com');
     cubit.passwordChanged('secret');
     final submission = cubit.submit();
 
-    cubit.signOut();
+    await cubit.signOut();
     pending.completeError(const LoginRequestException());
     await submission;
 

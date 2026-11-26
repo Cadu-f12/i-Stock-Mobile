@@ -16,6 +16,54 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<LoginCubit>().initialize();
+    });
+  }
+
+  Future<void> _openPastilles(LoginLoaded state) async {
+    final cubit = context.read<LoginCubit>();
+    if (!state.fromBiometrics && await cubit.canEnableBiometrics()) {
+      if (!mounted || cubit.state != state) return;
+      final enable = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Ativar desbloqueio?'),
+          content: const Text(
+            'Use a biometria deste aparelho ou o PIN para desbloquear uma sessão salva ainda válida.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Agora não'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Ativar agora'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted || cubit.state != state) return;
+      if (enable == true && !await cubit.enableBiometrics() && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível salvar o desbloqueio neste aparelho.',
+            ),
+          ),
+        );
+      }
+    }
+    if (!mounted || cubit.state != state) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const PastillesPlaceholderPage()),
+    );
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -31,11 +79,7 @@ class _LoginPageState extends State<LoginPage> {
       listener: (context, state) {
         if (state is LoginLoaded) {
           _passwordController.clear();
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(
-              builder: (_) => const PastillesPlaceholderPage(),
-            ),
-          );
+          _openPastilles(state);
         }
       },
       child: BlocBuilder<LoginCubit, LoginState>(
@@ -187,6 +231,18 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ],
+                          if (state.statusMessage != null) ...[
+                            const SizedBox(height: 12),
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(
+                                state.statusMessage!,
+                                style: const TextStyle(
+                                  color: Color(0xFFB43B42),
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 24),
                           SizedBox(
                             height: 48,
@@ -229,7 +285,11 @@ class _LoginPageState extends State<LoginPage> {
                           SizedBox(
                             height: 48,
                             child: OutlinedButton.icon(
-                              onPressed: () {},
+                              onPressed: isLoading
+                                  ? null
+                                  : context
+                                        .read<LoginCubit>()
+                                        .unlockWithBiometrics,
                               style: OutlinedButton.styleFrom(
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),

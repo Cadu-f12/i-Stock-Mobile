@@ -9,8 +9,11 @@ import 'package:i_stock_mobile/exceptions/login_exceptions.dart';
 import 'package:i_stock_mobile/main.dart';
 import 'package:i_stock_mobile/models/login_credentials.dart';
 import 'package:i_stock_mobile/models/login_session.dart';
+import 'package:i_stock_mobile/models/stored_session.dart';
 import 'package:i_stock_mobile/repositories/login_repository.dart';
 import 'package:i_stock_mobile/views/login_page.dart';
+
+import 'helpers/auth_fakes.dart';
 
 class FakeLoginRepository implements LoginRepository {
   FakeLoginRepository(this.authenticate);
@@ -22,10 +25,21 @@ class FakeLoginRepository implements LoginRepository {
       authenticate(credentials);
 }
 
-Future<void> showLogin(WidgetTester tester, LoginRepository repository) async {
+Future<void> showLogin(
+  WidgetTester tester,
+  LoginRepository repository, {
+  FakeSessionStore? store,
+  FakeDeviceAuthenticator? authenticator,
+  DateTime Function()? now,
+}) async {
   await tester.pumpWidget(
     BlocProvider<LoginCubit>(
-      create: (_) => LoginCubit(repository),
+      create: (_) => makeLoginCubit(
+        repository,
+        store: store,
+        authenticator: authenticator,
+        now: now,
+      ),
       child: const MaterialApp(home: LoginPage()),
     ),
   );
@@ -37,6 +51,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
 
     expect(find.text('Acesse sua conta'), findsOneWidget);
+    expect(find.text('Desbloquear com biometria'), findsOneWidget);
   });
 
   testWidgets('shows field errors for empty credentials', (tester) async {
@@ -135,5 +150,74 @@ void main() {
       find.text('Não foi possível entrar. Tente novamente.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('offers opt-in after password login and clears it on sign-out', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 11, 26, 12);
+    final store = FakeSessionStore();
+    final auth = FakeDeviceAuthenticator()..enrolled = true;
+    await showLogin(
+      tester,
+      FakeLoginRepository(
+        (_) async =>
+            const LoginSession(accessToken: 'token', tokenType: 'Bearer'),
+      ),
+      store: store,
+      authenticator: auth,
+      now: () => now,
+    );
+
+    await tester.enterText(find.byType(TextField).at(0), 'user@example.com');
+    await tester.enterText(find.byType(TextField).at(1), 'secret');
+    await tester.tap(find.text('Entrar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ativar desbloqueio?'), findsOneWidget);
+    await tester.tap(find.text('Ativar agora'));
+    await tester.pumpAndSettle();
+    expect(store.saved?.session.accessToken, 'token');
+    expect(find.text('Pastilles — próxima etapa'), findsOneWidget);
+    await tester.tap(find.byTooltip('Bloquear'));
+    await tester.pumpAndSettle();
+    expect(store.saved, isNotNull);
+    expect(find.text('Desbloquear com biometria'), findsOneWidget);
+    await tester.ensureVisible(find.text('Desbloquear com biometria'));
+    await tester.tap(find.text('Desbloquear com biometria'));
+    await tester.pumpAndSettle();
+    expect(auth.prompts, 1);
+    expect(find.text('Pastilles — próxima etapa'), findsOneWidget);
+    await tester.tap(find.byTooltip('Sair'));
+    await tester.pumpAndSettle();
+    expect(store.saved, isNull);
+    expect(find.text('Acesse sua conta'), findsOneWidget);
+    expect(find.text('Desbloquear com biometria'), findsOneWidget);
+  });
+
+  testWidgets('saved session shows unlock action and opens Pastilles', (
+    tester,
+  ) async {
+    final now = DateTime.utc(2026, 11, 26, 12);
+    final store = FakeSessionStore()
+      ..saved = StoredSession(
+        const LoginSession(accessToken: 'saved', tokenType: 'Bearer'),
+        now.add(const Duration(minutes: 10)),
+      );
+    final auth = FakeDeviceAuthenticator()..enrolled = true;
+    await showLogin(
+      tester,
+      FakeLoginRepository((_) => throw StateError('unexpected')),
+      store: store,
+      authenticator: auth,
+      now: () => now,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Desbloquear com biometria'), findsOneWidget);
+    await tester.ensureVisible(find.text('Desbloquear com biometria'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Desbloquear com biometria'));
+    await tester.pumpAndSettle();
+    expect(auth.prompts, 1);
+    expect(find.text('Pastilles — próxima etapa'), findsOneWidget);
   });
 }
