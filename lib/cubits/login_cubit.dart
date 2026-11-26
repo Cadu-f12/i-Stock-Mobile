@@ -8,8 +8,12 @@ class LoginCubit extends Cubit<LoginState> {
   LoginCubit(this._repository) : super(const LoginInitial());
 
   final LoginRepository _repository;
+  int _attemptId = 0;
 
-  void signOut() => emit(const LoginInitial());
+  void signOut() {
+    _attemptId++;
+    emit(const LoginInitial());
+  }
 
   void emailChanged(String email) {
     if (state is LoginLoading) return;
@@ -73,11 +77,13 @@ class LoginCubit extends Cubit<LoginState> {
         isPasswordVisible: passwordVisible,
       ),
     );
+    final attemptId = ++_attemptId;
 
     try {
       final session = await _repository.login(
         LoginCredentials(email: email, password: password),
       );
+      if (isClosed || attemptId != _attemptId) return;
       emit(
         LoginLoaded(
           email: email,
@@ -86,6 +92,7 @@ class LoginCubit extends Cubit<LoginState> {
         ),
       );
     } on LoginInvalidCredentialsException {
+      if (isClosed || attemptId != _attemptId) return;
       emit(
         LoginError(
           email: email,
@@ -95,6 +102,7 @@ class LoginCubit extends Cubit<LoginState> {
         ),
       );
     } catch (_) {
+      if (isClosed || attemptId != _attemptId) return;
       emit(
         LoginError(
           email: email,

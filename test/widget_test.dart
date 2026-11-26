@@ -52,6 +52,27 @@ void main() {
     expect(find.text('Informe sua senha.'), findsOneWidget);
   });
 
+  testWidgets('password visibility follows the Cubit state', (tester) async {
+    await showLogin(
+      tester,
+      FakeLoginRepository((_) => throw StateError('unexpected')),
+    );
+    await tester.enterText(find.byType(TextField).at(1), 'secret');
+    expect(
+      tester.widget<TextField>(find.byType(TextField).at(1)).obscureText,
+      isTrue,
+    );
+
+    await tester.tap(find.byTooltip('Mostrar senha'));
+    await tester.pump();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField).at(1)).obscureText,
+      isFalse,
+    );
+    expect(find.text('secret'), findsOneWidget);
+  });
+
   testWidgets('shows loading and opens placeholder after success', (
     tester,
   ) async {
@@ -64,6 +85,10 @@ void main() {
     await tester.pump();
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
     pending.complete(
       const LoginSession(accessToken: 'token', tokenType: 'Bearer'),
     );
