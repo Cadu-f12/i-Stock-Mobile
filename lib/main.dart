@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
   );
 
   Widget _buildApp() => MaterialApp(
-    title: 'I-STOCK',
+    title: 'I-Stock Mobile',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
       useMaterial3: true,
