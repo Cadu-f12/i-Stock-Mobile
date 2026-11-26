@@ -75,6 +75,28 @@ O aplicativo é desenvolvido com **Flutter** e **Dart**. A comunicação com o b
 
 Instale o [Flutter SDK](https://docs.flutter.dev/get-started/install) e um ambiente de desenvolvimento compatível com Android ou iOS.
 
+### Configurar a URL da API (`.env`)
+
+O aplicativo lê `ISTOCK_API_BASE_URL` de um arquivo `.env` na raiz do projeto. Crie seu arquivo local a partir do modelo versionado:
+
+```bash
+cp .env.example .env
+```
+
+Edite o `.env` e informe a URL base que o aplicativo em execução consiga acessar:
+
+```dotenv
+ISTOCK_API_BASE_URL=http://10.0.2.2:8080/
+```
+
+Escolha o endereço conforme o destino:
+
+* **Emulador Android:** `http://10.0.2.2:8080/` acessa a porta 8080 do computador de desenvolvimento.
+* **Simulador iOS ou aplicativo executado no mesmo computador:** use `http://localhost:8080/` quando a API estiver disponível nesse computador.
+* **Dispositivo físico:** use o endereço da rede local do computador, por exemplo `http://192.168.1.20:8080/`. O dispositivo e o computador precisam conseguir se comunicar, e a API deve aceitar conexões da rede local.
+
+`localhost` aponta para o próprio dispositivo ou emulador e pode não alcançar uma API executada no computador de desenvolvimento. O aplicativo carrega o `.env` ao iniciar; encerre e execute o app novamente depois de alterar o valor. O `.env` está no `.gitignore`; mantenha esse arquivo local e fora dos commits. A URL é configuração, não um local para senhas ou segredos da API, pois valores incluídos em um aplicativo móvel podem ser inspecionados.
+
 ### Executar o aplicativo
 
 ```bash
@@ -84,7 +106,7 @@ flutter pub get
 flutter run
 ```
 
-Selecione um dispositivo conectado ou inicie um emulador antes de executar o aplicativo. As configurações de conexão com a API e os requisitos do backend serão documentados quando forem adicionados ao projeto.
+Selecione um dispositivo conectado ou inicie um emulador antes de executar o aplicativo. Confira se a URL base da API no `.env` pode ser acessada por esse destino.
 
 ---
 
