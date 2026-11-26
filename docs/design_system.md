@@ -4,7 +4,7 @@
 **Functional basis:** [mobile requirements v1](requirements.md)
 **Date:** November 24, 2026
 
-This guide defines visual and interaction patterns for Login, Pastilles, and Movement history, including the native biometric-unlock flow. Product behavior comes from the requirements document. It does not define API endpoints or select specific Flutter packages.
+This guide defines visual and interaction patterns for Login, Pastilles, and Movement history, including the native biometric-unlock flow. Product behavior comes from the [requirements document](requirements.md). API endpoints and payloads are defined separately in the [I-STOCK Manager API contract](api/openapi.yaml); this guide does not define API behavior or select specific Flutter packages.
 
 ## 1. Product structure
 

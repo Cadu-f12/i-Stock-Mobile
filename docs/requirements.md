@@ -2,7 +2,7 @@
 
 **Date:** 24/11/2026
 **Version:** v1 — simplified mobile scope
-**Status:** Product scope defined; technical and integration details remain open.
+**Status:** Product scope defined; API contract documented; platform and some integration details remain open.
 
 ## 1. Objective and scope
 
@@ -16,7 +16,7 @@ The application has three screens:
 
 Biometric unlocking is part of the login/session flow and is not a separate screen or navigation destination.
 
-Only these three product screens are in this scope. Offline-first operation, local notifications, and local item photography are not included. The client uses Flutter; this document does not define API endpoints or payloads.
+Only these three product screens are in this scope. Offline-first operation, local notifications, and local item photography are not included. The client uses Flutter. API endpoints and payloads are defined by the [I-STOCK Manager API contract](api/openapi.yaml); this requirements document defines product behavior and scope.
 
 ## 2. Functional requirements
 
@@ -27,7 +27,7 @@ Only these three product screens are in this scope. Offline-first operation, loc
 - The authenticated area must provide a way to sign out.
 - The API authenticates requests with bearer JWTs. Tokens expire after 15 minutes; the API does not issue refresh tokens. The client must follow the API response and must not invent endpoints or renewal behavior.
 - The client must store a JWT only in platform-secure storage and must never store the user's email/password as a way to restore a session.
-- Password recovery and account provisioning must follow the existing identity service; their behavior is not defined here.
+- The login endpoint and request/response schema must follow the [I-STOCK Manager API contract](api/openapi.yaml). Password recovery and account provisioning must follow the existing identity service; their behavior is not defined here.
 
 ### RF-02 — Navigate the three screens
 
@@ -83,24 +83,24 @@ Only these three product screens are in this scope. Offline-first operation, loc
 
 - Pastille identifiers, stock balances, movement records, and user identity must use the existing I-STOCK system/API contract.
 - Stock changes must use operations accepted by the backend. The server response is authoritative for the confirmed balance and movement.
-- Authentication uses bearer JWTs with a 15-minute lifetime and no refresh-token flow. The client must use the actual login and stock API contracts; endpoints, payload formats, and response schemas are not specified here.
+- Authentication uses bearer JWTs with a 15-minute lifetime and no refresh-token flow. The client must use the actual API contract in [I-STOCK Manager API](api/openapi.yaml). The Swagger documents login and pastille listing/detail operations; it currently does not document stock mutation or a dedicated movement-history/search operation. Confirm those contracts before implementing those integrations.
 - Biometrics are a device-local gate for access to the stored JWT. Biometric data must not be sent to the I-STOCK API.
 
 ## 6. Technology and platform
 
 - The product target is a Flutter mobile application.
 - Android/iOS minimum versions, the biometric plugin, and secure-storage implementation must be confirmed during implementation planning.
-- The existing Flutter starter project does not mean product features are already implemented.
+- Requirements describe the intended product and do not imply that a feature is already implemented. Consult `AGENTS.md` for the current implementation snapshot.
 
 ## 7. Open decisions
 
 Resolve these before implementation where they affect the design or integration:
 
-1. What are the exact login/logout endpoint contracts, and what are the password-recovery and account-provisioning rules?
+1. What are the logout endpoint contract and password-recovery/account-provisioning rules? The documented login contract is in `docs/api/openapi.yaml`.
 2. Does stock management mean only entries and withdrawals, or are stock corrections/absolute adjustments also required?
 3. Which fields are searchable in movement history, and should search be immediate or submitted?
 4. Which Android/iOS versions and biometric types must be supported?
-5. What exact pastille and movement fields does the existing API return?
+5. Which API operations will support stock mutations and movement-history/search, and what are their request/response contracts? Pastille and movement schemas currently documented by the API are in `docs/api/openapi.yaml`.
 
 ## 8. Requirements governance
 
