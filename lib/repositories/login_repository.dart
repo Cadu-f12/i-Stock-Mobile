@@ -25,6 +25,11 @@ class LoginRepositoryImpl implements LoginRepository {
 
   @override
   Future<LoginSession> login(LoginCredentials credentials) async {
+    if ((baseUri.scheme != 'http' && baseUri.scheme != 'https') ||
+        baseUri.host.isEmpty) {
+      throw const LoginRequestException();
+    }
+
     final response = await _client.post(
       baseUri.resolve(LoginRepository.loginRoute),
       headers: const {

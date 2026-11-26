@@ -9,6 +9,8 @@ class LoginCubit extends Cubit<LoginState> {
 
   final LoginRepository _repository;
 
+  void signOut() => emit(const LoginInitial());
+
   void emailChanged(String email) {
     if (state is LoginLoading) return;
     emit(
